@@ -161,7 +161,7 @@ export default function Page({ params: { roomId } }: any) {
                     {/* {message.imgUrl && <img className="h-[50px] w-[50px]" src={message.imgUrl} alt="" />} */}
                     <div className="flex gap-3 overflow-auto max-w-fit">
                       {message.imgUrl && message.imgUrl.map((img: any) => (
-                        <Image key={img.url} width={50} height={50} priority className="h-[50px] w-[50px]" src={img.url} alt="" />
+                        <Image key={img.url} width={50} height={50} priority className="h-[50px] w-[50px] object-contain" src={img.url} alt="" />
                       ))}
                     </div>
                   </div>
