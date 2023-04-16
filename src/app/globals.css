@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .container {
+    --container: 1180px;
+    --pd-container: 10px;
+    max-width: var(--container);
+    padding-left: var(--pd-container);
+    padding-right: var(--pd-container);
+  }
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
@@ -18,10 +28,7 @@
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
+  background: linear-gradient(to bottom,
       transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+      rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
 }
