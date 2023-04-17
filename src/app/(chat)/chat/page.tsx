@@ -4,6 +4,7 @@ import { app, database } from "@/utils/firebase";
 import { get, getDatabase, onChildAdded, onValue, push, ref, set } from "firebase/database";
 import * as React from "react";
 import { GoogleAuthProvider, getAuth, onAuthStateChanged, signInWithPopup } from 'firebase/auth';
+import { useRouter } from "next/navigation";
 
 type Props = {}
 interface Message {
@@ -16,13 +17,9 @@ const inputClass = "px-2 py-1 text-red-400";
 export default function Page({ }: Props) {
   const [room, setRoom] = React.useState<any>();
   const [roomId, setRoomId] = React.useState<any>();
-  const [text, setText] = React.useState<any>();
   const [messages, setMessages] = React.useState<Message[]>([]);
   const auth = getAuth(app);
-
-  const handleChangeState = (e: any) => {
-    setText(e.target.name = e.target.value)
-  }
+  const router = useRouter();
 
   React.useEffect(() => {
     const messagesRef = ref(database, "messages");
@@ -37,19 +34,6 @@ export default function Page({ }: Props) {
       }
     });
   }, []);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (text?.trim() === "") return;
-    const messageRef = push(ref(database, "messages"));
-    const message = {
-      text,
-      createdAt: Date.now(),
-    };
-    addMessage(roomId.id, auth.currentUser!.uid, text);
-
-    setText("");
-  };
 
   const handleCreateRoom = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,22 +65,6 @@ export default function Page({ }: Props) {
     await set(newMemberRef, userId);
     return newMemberRef.key;
   };
-  const getRoomMessages = (roomId: any) => {
-    const messagesRef = ref(database, `messages/${roomId}`);
-    onChildAdded(messagesRef, (snapshot: { val: () => any; key: any; }) => {
-      const message = snapshot.val();
-      message.id = snapshot.key;
-    });
-  };
-  const addMessage = async (roomId: any, author: any, text: any) => {
-    const newMessageRef = push(ref(database, `messages/${roomId}`));
-    await set(newMessageRef, {
-      author,
-      text,
-      createdAt: Date.now()
-    });
-    return newMessageRef.key;
-  };
 
   const provider = new GoogleAuthProvider();
   const hasExistUser = async (uid: any) => {
@@ -121,6 +89,7 @@ export default function Page({ }: Props) {
         });
         sessionStorage.setItem("accessToken", accessToken);
       }
+      router.push("/chatRoom");
       return result.user;
     } catch (error) {
       console.log(error);

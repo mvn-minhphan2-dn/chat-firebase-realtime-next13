@@ -1,14 +1,15 @@
 "use client"
 
+import * as React from 'react'
 import { chatRooms } from "@/contants/ChatRoom";
 import { useAuthContext } from "@/context/auth";
 import useFileReader from "@/utils/fireReader";
 import { database, storage } from "@/utils/firebase";
-import { child, get, onChildAdded, onValue, push, ref, serverTimestamp, set } from "firebase/database";
-import { getDownloadURL, ref as storageRef, uploadBytesResumable, uploadString } from "firebase/storage";
+import { onValue, push, ref, serverTimestamp, set } from "firebase/database";
+import { getDownloadURL, ref as storageRef, uploadBytesResumable } from "firebase/storage";
 import Image from "next/image";
 import Link from "next/link";
-import * as React from 'react'
+import { motion } from 'framer-motion';
 
 type Props = {}
 const className = "transition-transform border-2 hover:scale-110";
@@ -19,15 +20,15 @@ export default function Page({ params: { roomId } }: any) {
   const [messages, setMessages] = React.useState<any>([]);
   const containerRef = React.useRef<any>();
   const [fileImg, imagesArr, setImagesArr, handleFileUpload] = useFileReader();
-  
-  const room = chatRooms.find((f) => f.id === roomId);
+
+  const room = React.useMemo(() => {
+    return chatRooms.find((f) => f.id === roomId)
+  }, [roomId]);
   // const { user: { uid, displayName } } = useAuthContext();
   const { user } = useAuthContext();
   const addMessage = async (roomId: any, author: any, displayName: any, text: any) => {
     try {
       const newMessageRef = push(ref(database, `messages/${roomId}`));
-      // const str = storageRef(storage, 'images/messages' + fileImg.name);
-      // const uploadTask = uploadBytesResumable(str, fileImg);
       const imageUrls = [] as any;
       const promises = [];
       const data = {
@@ -37,7 +38,7 @@ export default function Page({ params: { roomId } }: any) {
         createdAt: serverTimestamp()
       }
 
-      if(fileImg){
+      if (fileImg) {
         for (let i = 0; i < fileImg.length; i++) {
           const image = fileImg[i];
           const str = storageRef(storage, `images/messages/${image.name}`);
@@ -45,17 +46,15 @@ export default function Page({ params: { roomId } }: any) {
           const promise = new Promise<void>((resolve, reject) => {
             uploadTask.on('state_changed',
               (snapshot) => {
-                // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
                 console.log('Upload is ' + progress + '% done');
               },
               (error) => {
-                // Handle unsuccessful uploads
                 reject(error);
               },
               async () => {
                 const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                imageUrls.push(downloadURL);
+                imageUrls.push({ url: downloadURL });
                 resolve();
               }
             );
@@ -63,41 +62,10 @@ export default function Page({ params: { roomId } }: any) {
           promises.push(promise);
         }
         await Promise.all(promises);
-        const processImg = imageUrls.map((url: any) => ({ url }));
         await set(newMessageRef, {
           ...data,
-          imgUrl: processImg
+          imgUrl: imageUrls
         });
-    
-        // Listen for state changes, errors, and completion of the upload.
-        // uploadTask.on('state_changed',
-        //   (snapshot) => {
-        //     // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-        //     const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        //     console.log('Upload is ' + progress + '% done');
-        //     switch (snapshot.state) {
-        //       case 'paused':
-        //         console.log('Upload is paused');
-        //         break;
-        //       case 'running':
-        //         console.log('Upload is running');
-        //         break;
-        //     }
-        //   },
-        //   (error) => {
-        //     console.log(error);
-        //   },
-        //   async () => {
-        //     const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-        //     await set(newMessageRef, {
-        //       displayName,
-        //       author,
-        //       text,
-        //       imgUrl: downloadURL,
-        //       createdAt: serverTimestamp()
-        //     });
-        //   }
-        // );
       } else {
         await set(newMessageRef, data);
       }
@@ -138,13 +106,27 @@ export default function Page({ params: { roomId } }: any) {
 
   React.useEffect(() => {
     if (containerRef.current) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+      containerRef.current.scrollTo({
+        top: containerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
     }
   }, [messages]);
-
+  // variants motion
+  const variants = {
+    hidden: { opacity: 0, x: -200, y: 0 },
+    enter: { opacity: 1, x: 0, y: 0 },
+    exit: { opacity: 0, x: 0, y: -100 },
+  }
   return (
     <>
-      <section className="container">
+      <motion.section className="container"
+        variants={variants}
+        initial="hidden"
+        animate="enter"
+        exit="exit"
+        transition={{ type: 'linear' }} 
+      >
         <div className="my-5">
           <div className="grid justify-center mb-5 text-center">
             <h1 className="mb-2 text-3xl">Chat Room</h1>
@@ -158,7 +140,6 @@ export default function Page({ params: { roomId } }: any) {
                   <div className="grid pb-2">
                     <span className="text-lg text-red-500">{message?.displayName}</span>
                     <span>{message?.text}</span>
-                    {/* {message.imgUrl && <img className="h-[50px] w-[50px]" src={message.imgUrl} alt="" />} */}
                     <div className="flex gap-3 overflow-auto max-w-fit">
                       {message.imgUrl && message.imgUrl.map((img: any) => (
                         <Image key={img.url} width={50} height={50} priority className="h-[50px] w-[50px] object-contain" src={img.url} alt="" />
@@ -186,7 +167,7 @@ export default function Page({ params: { roomId } }: any) {
             </form>
           </div>
         </div>
-      </section>
+      </motion.section>
     </>
   )
 }
