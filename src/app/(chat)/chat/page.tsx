@@ -89,7 +89,7 @@ export default function Page({ }: Props) {
         });
         sessionStorage.setItem("accessToken", accessToken);
       }
-      router.push("/chatRoom");
+      router.push("/rooms");
       return result.user;
     } catch (error) {
       console.log(error);
