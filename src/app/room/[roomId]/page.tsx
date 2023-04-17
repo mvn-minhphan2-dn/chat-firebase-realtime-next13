@@ -131,7 +131,7 @@ export default function Page({ params: { roomId } }: any) {
           <div className="grid justify-center mb-5 text-center">
             <h1 className="mb-2 text-3xl">Chat Room</h1>
             <span className="mb-2 text-2xl">{room?.title}</span>
-            <Link href="/chatRoom" className={`p-2 border-2 w-fit ${className}`}>Back To All Rooms</Link>
+            <Link href="/rooms" className={`p-2 border-2 w-fit ${className}`}>Back To All Rooms</Link>
           </div>
           <div className="container py-2 min-h-[60vh] w-[50%] border-2 flex flex-col">
             <div className="grid gap-2 max-h-[500px] content-baseline overflow-auto flex-1" ref={containerRef}>
