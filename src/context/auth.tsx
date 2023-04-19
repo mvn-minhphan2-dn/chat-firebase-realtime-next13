@@ -2,7 +2,6 @@
 
 import { app } from "@/utils/firebase";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { Figtree } from "next/font/google";
 import * as React from "react";
 
 export const AuthContext = React.createContext({});
@@ -14,7 +13,7 @@ export const AuthContextProvider = ({ children }: any) => {
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user: any) => {
       if (user) {
         setUser(user);
       } else {

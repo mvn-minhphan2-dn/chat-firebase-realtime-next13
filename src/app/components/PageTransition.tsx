@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useRouter } from "next/navigation";
 import * as React from "react";
 
@@ -17,21 +17,15 @@ const pageTransition = {
 
 const PageTransition = ({ children }: any) => {
   return (
-    <AnimatePresence 
-      mode="wait"
-      initial={true}
-      onExitComplete={() => window.scrollTo(0, 0)}
+    <motion.div
+      initial="exit"
+      animate="enter"
+      exit="exit"
+      variants={pageVariants}
+      transition={pageTransition}
     >
-      <motion.div
-        initial="exit"
-        animate="enter"
-        exit="exit"
-        variants={pageVariants}
-        transition={pageTransition}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
+      {children}
+    </motion.div>
   );
 };
 

@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  mongo:
+    image: mongo:latest
+    environment:
+      - MONGO_INITDB_DATABASE=mydb
+    volumes:
+      - ./data:/data/db
+    ports:
+      - "27017:27017"
+
+  nextjs:
+    build:
+      context: .
+    image: nextjs
+    environment:
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://mongo:27017/mydb
+    depends_on:
+      - mongo
+    ports:
+      - "3000:3000"
