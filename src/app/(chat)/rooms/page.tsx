@@ -37,14 +37,17 @@ export default function Page({ }: Props) {
   }
 
   const handleCreateRoom = async () => {
-    const roomRef = ref(database, `rooms/${roomName}`);
-    await set(roomRef, {
-      id: roomName,
-      title: roomName?.charAt(0).toUpperCase() + roomName!.slice(1),
-      createdAt: serverTimestamp()
-    });
-    setRoomName("");
-    return roomRef.key;
+    if(roomName.trim() !== ""){
+      const roomNameTrim = roomName.replace(/\s+/g, "-");
+      const roomRef = ref(database, `rooms/${roomNameTrim}`);
+      await set(roomRef, {
+        id: roomNameTrim,
+        title: roomName?.charAt(0).toUpperCase() + roomName!.slice(1),
+        createdAt: serverTimestamp()
+      });
+      setRoomName("");
+      return roomRef.key;
+    }
   }
 
   const setUserJoinRoom = async (roomId: any) => {
@@ -66,12 +69,7 @@ export default function Page({ }: Props) {
     <>
       <section className="container flex flex-col items-center justify-center">
         <div className="mb-10">
-          <input className="p-2 mr-3 text-pink-400 border-2 border-red-500"
-            onKeyUp={event => {
-              if (event.key === 'Enter') {
-                handleCreateRoom();
-              }
-            }}
+          <input required className="p-2 mr-3 text-pink-400 border-2 border-red-500"
             type="text" placeholder="Room name"
             value={roomName}
             onChange={(e) => setRoomName(e.target.value)}

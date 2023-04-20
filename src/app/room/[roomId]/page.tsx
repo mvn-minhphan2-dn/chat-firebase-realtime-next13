@@ -38,45 +38,46 @@ export default function Page({ params: { roomId } }: any) {
       const data = {
         displayName,
         author,
-        text,
+        text: text.trim(),
         photoURL,
         createdAt: serverTimestamp()
       }
-
-      if (fileImg) {
-        for (let i = 0; i < fileImg.length; i++) {
-          const image = fileImg[i];
-          const str = storageRef(storage, `images/messages/${image.name}`);
-          const uploadTask = uploadBytesResumable(str, image);
-          const promise = new Promise<void>((resolve, reject) => {
-            uploadTask.on('state_changed',
-              (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                console.log('Upload is ' + progress + '% done');
-              },
-              (error) => {
-                reject(error);
-              },
-              async () => {
-                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                imageUrls.push({ url: downloadURL });
-                resolve();
-              }
-            );
+      if(text.trim() !== ""){
+        if (fileImg) {
+          for (let i = 0; i < fileImg.length; i++) {
+            const image = fileImg[i];
+            const str = storageRef(storage, `images/messages/${image.name}`);
+            const uploadTask = uploadBytesResumable(str, image);
+            const promise = new Promise<void>((resolve, reject) => {
+              uploadTask.on('state_changed',
+                (snapshot) => {
+                  const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                  console.log('Upload is ' + progress + '% done');
+                },
+                (error) => {
+                  reject(error);
+                },
+                async () => {
+                  const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                  imageUrls.push({ url: downloadURL });
+                  resolve();
+                }
+              );
+            });
+            promises.push(promise);
+          }
+          await Promise.all(promises);
+          await set(newMessageRef, {
+            ...data,
+            imgUrl: imageUrls
           });
-          promises.push(promise);
+        } else {
+          await set(newMessageRef, data);
         }
-        await Promise.all(promises);
-        await set(newMessageRef, {
-          ...data,
-          imgUrl: imageUrls
-        });
-      } else {
-        await set(newMessageRef, data);
+        setImagesArr("");
+        fileRef.current.value = "";
+        return newMessageRef.key;
       }
-      setImagesArr("");
-      fileRef.current.value = "";
-      return newMessageRef.key;
     } catch (error) {
       console.log(error);
     }
