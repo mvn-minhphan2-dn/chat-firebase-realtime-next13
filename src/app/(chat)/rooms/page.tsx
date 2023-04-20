@@ -2,11 +2,12 @@
 
 import { useAuthContext } from "@/context/auth"
 import { database } from "@/utils/firebase"
-import { onValue, ref, serverTimestamp, set } from "firebase/database"
+import { onValue, ref, serverTimestamp, set, update, orderByChild, query, limitToFirst, off, limitToLast } from "firebase/database"
 import Link from "next/link"
 import * as React from 'react'
 
 type Props = {}
+const className = "px-3 py-2 transition-transform border-2 hover:scale-105 w-[100px]"
 
 export default function Page({ }: Props) {
   const [roomName, setRoomName] = React.useState<string>("");
@@ -14,8 +15,11 @@ export default function Page({ }: Props) {
   const { user } = useAuthContext();
 
   const handleGetRooms = async () => {
+    // const roomRef = ref(database, "rooms");
     const roomRef = ref(database, "rooms");
-    onValue(roomRef, (snapshot) => {
+    const roomQuery = query(roomRef, orderByChild("createdAt"), limitToLast(4));
+
+    const snapshopCallback = (snapshot: any) => {
       const data = snapshot.val();
       if (data) {
         const resetRooms = Object.entries(data).map(([_id, value]) => ({
@@ -24,7 +28,12 @@ export default function Page({ }: Props) {
         }))?.sort((a: any, b: any) => b.createdAt - a.createdAt);
         setRooms(resetRooms);
       }
-    });
+    }
+
+    onValue(roomQuery, snapshopCallback);
+    return () => {
+      off(roomQuery, snapshopCallback as any);
+    }
   }
 
   const handleCreateRoom = async () => {
@@ -36,6 +45,14 @@ export default function Page({ }: Props) {
     });
     setRoomName("");
     return roomRef.key;
+  }
+
+  const setUserJoinRoom = async (roomId: any) => {
+    const dbRef = ref(database);
+    const updates = {} as any;
+    updates[`rooms/${roomId}/members/${user?.uid}`] = true;
+    updates[`users/${user?.uid}/rooms/${roomId}`] = true;
+    await update(dbRef, updates);
   }
 
   React.useEffect(() => {
@@ -66,10 +83,16 @@ export default function Page({ }: Props) {
           <ul className="grid grid-cols-2 gap-2">
             {rooms?.map((room: any) => (
               <li key={room.id}>
-                <Link className="flex justify-center h-full p-10 text-pink-600 transition-transform border-2 border-pink-600 hover:scale-105" href={`/room/${room.id}`}>{room.title}</Link>
+                <Link className="flex justify-center h-full p-10 text-pink-600 transition-transform border-2 border-pink-600 group hover:scale-105" href={`/room/${room.id}`}
+                  onClick={() => setUserJoinRoom(room.id)}
+                >{room.title}</Link>
               </li>
             ))}
           </ul>
+          <div className="flex justify-center gap-5 mt-10">
+            <button className={`${className}`}>Previous</button>
+            <button className={`${className}`}>Next</button>
+          </div>
         </div>
       </section>
     </>
