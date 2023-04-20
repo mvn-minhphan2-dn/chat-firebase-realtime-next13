@@ -17,7 +17,7 @@ export default function Page({ }: Props) {
   const handleGetRooms = async () => {
     // const roomRef = ref(database, "rooms");
     const roomRef = ref(database, "rooms");
-    const roomQuery = query(roomRef, orderByChild("createdAt"), limitToLast(4));
+    const roomQuery = query(roomRef, orderByChild("createdAt"));
 
     const snapshopCallback = (snapshot: any) => {
       const data = snapshot.val();
@@ -89,7 +89,7 @@ export default function Page({ }: Props) {
               </li>
             ))}
           </ul>
-          <div className="flex justify-center gap-5 mt-10">
+          <div className="justify-center hidden gap-5 mt-10">
             <button className={`${className}`}>Previous</button>
             <button className={`${className}`}>Next</button>
           </div>
