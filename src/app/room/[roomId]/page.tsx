@@ -4,7 +4,7 @@ import * as React from 'react'
 import { useAuthContext } from "@/context/auth";
 import useFileReader from "@/utils/fileReader";
 import { database, storage } from "@/utils/firebase";
-import { child, equalTo, get, onChildAdded, onChildChanged, onValue, orderByChild, push, query, ref, serverTimestamp, set, update } from "firebase/database";
+import { child, equalTo, get, off, onChildAdded, onChildChanged, onValue, orderByChild, push, query, ref, serverTimestamp, set, update } from "firebase/database";
 import { getDownloadURL, ref as storageRef, uploadBytesResumable } from "firebase/storage";
 import Image from "next/image";
 import Link from "next/link";
@@ -103,7 +103,9 @@ export default function Page({ params: { roomId } }: any) {
   const getUserRoom = async () => {
     const roomsRef = ref(database, 'rooms');
     const usersRef = ref(database, 'users');
-    return get(child(roomsRef, `${roomId}/members`)).then(async (membersSnapshot) => {
+    
+    const membersInRoomRef = ref(database, `rooms/${roomId}/members`);
+    const snapShotCallback = async (membersSnapshot: any) => {
       const members = membersSnapshot.val() || {};
       const memberIds = Object.keys(members).filter((memberId) => members[memberId] !== false);
       
@@ -117,7 +119,26 @@ export default function Page({ params: { roomId } }: any) {
           setRoomUsers(roomUser);
         });
       }
-    });
+    }
+    onValue(membersInRoomRef, snapShotCallback);
+    return () => {
+      off(membersInRoomRef, snapShotCallback as any);
+    }
+    // return get(child(roomsRef, `${roomId}/members`)).then(async (membersSnapshot) => {
+    //   const members = membersSnapshot.val() || {};
+    //   const memberIds = Object.keys(members).filter((memberId) => members[memberId] !== false);
+      
+    //   if (memberIds.length) {
+    //     const promises = memberIds.map(async (memberId) => {
+    //       const userSnapshot = await get(child(usersRef, memberId));
+    //       return userSnapshot.val();
+    //     });
+    //     return await Promise.all(promises).then((roomUser) => {
+    //       roomUser.sort((a: any, b: any) => b.createdAt - a.createdAt);
+    //       setRoomUsers(roomUser);
+    //     });
+    //   }
+    // });
     //   // const usersQuery = query(usersRef,orderByChild(`rooms/${roomId}`),equalTo(true));
     //   // const usersSnapshot = await get(usersQuery);
     //   // const users = usersSnapshot.val() || {};

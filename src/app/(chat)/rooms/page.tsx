@@ -19,7 +19,7 @@ export default function Page({ }: Props) {
     const roomRef = ref(database, "rooms");
     const roomQuery = query(roomRef, orderByChild("createdAt"));
 
-    const snapshopCallback = (snapshot: any) => {
+    const snapShotCallback = (snapshot: any) => {
       const data = snapshot.val();
       if (data) {
         const resetRooms = Object.entries(data).map(([_id, value]) => ({
@@ -30,9 +30,9 @@ export default function Page({ }: Props) {
       }
     }
 
-    onValue(roomQuery, snapshopCallback);
+    onValue(roomQuery, snapShotCallback);
     return () => {
-      off(roomQuery, snapshopCallback as any);
+      off(roomQuery, snapShotCallback as any);
     }
   }
 
