@@ -26,11 +26,8 @@ export default function Page({ params: { roomId } }: any) {
   // const { user: { uid, displayName } } = useAuthContext();
   const { user } = useAuthContext();
 
-  React.useEffect(() => {
-    if (!user) router.push("/login");
-  }, [])
   // handle function messages
-  const addMessage = async (roomId: any, author: any, displayName: any, photoURL: any, text: any) => {
+  const addMessage = async (author: any, displayName: any, photoURL: any, text: any) => {
     try {
       const newMessageRef = push(ref(database, `messages/${roomId}`));
       const imageUrls = [] as any;
@@ -97,12 +94,12 @@ export default function Page({ params: { roomId } }: any) {
   }
   const handleOnSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault();
-    addMessage(roomId, user?.uid, user?.displayName, user?.photoURL, value);
+    addMessage(user?.uid, user?.displayName, user?.photoURL, value);
     setValue("");
   }
 
   const getUserRoom = async () => {
-    const roomsRef = ref(database, 'rooms');
+    // const roomsRef = ref(database, 'rooms');
     const usersRef = ref(database, 'users');
     
     const membersInRoomRef = ref(database, `rooms/${roomId}/members`);
@@ -211,7 +208,7 @@ export default function Page({ params: { roomId } }: any) {
                     <div className="grid pb-2">
                       <div className="flex gap-2">
                         {message?.author !== user?.uid && <Image className="rounded-full" height={20} width={30} src={message?.photoURL} alt="" /> }
-                        <span className="flex px-3 bg-pink-200 border-2 rounded-xl w-fit">{message?.text}</span>
+                        <span className="flex items-center px-3 bg-pink-200 border-2 rounded-xl w-fit">{message?.text}</span>
                       </div>
                       <div className="flex gap-3 overflow-auto max-w-fit">
                         {message.imgUrl && message.imgUrl.map((img: any) => (
