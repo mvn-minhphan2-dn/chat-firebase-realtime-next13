@@ -1,15 +1,18 @@
 "use client"
 
 import { useAuthContext } from "@/context/auth"
+import { debounce } from "@/utils/debounce"
 import { database } from "@/utils/firebase"
-import { onValue, ref, serverTimestamp, set, update, orderByChild, query, limitToFirst, off, limitToLast } from "firebase/database"
+import { onValue, ref, serverTimestamp, set, update, orderByChild, query, limitToFirst, off, limitToLast, push } from "firebase/database"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import * as React from 'react'
 
 type Props = {}
 const className = "px-3 py-2 transition-transform border-2 hover:scale-105 w-[100px]"
 
 export default function Page({ }: Props) {
+  const router = useRouter();
   const [roomName, setRoomName] = React.useState<string>("");
   const [rooms, setRooms] = React.useState<any>();
   const { user } = useAuthContext();
@@ -36,19 +39,20 @@ export default function Page({ }: Props) {
     }
   }
 
-  const handleCreateRoom = async () => {
+  const handleDebouncedCreateRoom = debounce (async () => {
     if(roomName.trim() !== ""){
       const roomNameTrim = roomName.replace(/\s+/g, "-");
-      const roomRef = ref(database, `rooms/${roomNameTrim}`);
-      await set(roomRef, {
-        id: roomNameTrim,
+      const roomRef = ref(database, `rooms`);
+      await push(roomRef, {
+        // id: roomNameTrim,
         title: roomName?.charAt(0).toUpperCase() + roomName!.slice(1),
         createdAt: serverTimestamp()
       });
       setRoomName("");
       return roomRef.key;
     }
-  }
+  }, 1000);
+
 
   const setUserJoinRoom = async (roomId: any) => {
     const dbRef = ref(database);
@@ -59,6 +63,7 @@ export default function Page({ }: Props) {
   }
 
   React.useEffect(() => {
+    if (!user) router.push("/login");
     const unsubscribe = handleGetRooms()
     return () => {
       unsubscribe
@@ -73,11 +78,14 @@ export default function Page({ }: Props) {
             type="text" placeholder="Room name"
             value={roomName}
             onChange={(e) => setRoomName(e.target.value)}
+            // onKeyDown={(e) =>{
+            //   e.key === "Enter" && handleDebouncedCreateRoom()
+            // }}
           />
-          <button onClick={handleCreateRoom} className="px-4 py-2 bg-pink-400">Create Rooms</button>
+          <button onClick={handleDebouncedCreateRoom} className="px-4 py-2 bg-pink-400">Create Rooms</button>
         </div>
         <div>
-          <h2 className="mb-5 text-4xl text-pink-600">Choose a Chat Room</h2>
+          <h2 className="mb-5 text-4xl text-center text-pink-600">Choose a Chat Room</h2>
           <ul className="grid grid-cols-2 gap-2">
             {rooms?.map((room: any) => (
               <li key={room.id}>
