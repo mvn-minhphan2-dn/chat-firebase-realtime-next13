@@ -156,14 +156,17 @@ export default function Page({ params: { roomId } }: any) {
     router.push("/rooms");
   }
 
-  React.useEffect(() => { 
-    const unsubscribe = [
-      getUserRoom(),
-      getRoomMessages()
-    ]
+  React.useEffect(() => {
+    const unsubscribes = [] as any;
+    const fetchData = async () => {
+      unsubscribes.push(await getUserRoom());
+      unsubscribes.push(await getRoomMessages());
+    };
+    fetchData();
+
     return () => {
-      unsubscribe
-    }
+      unsubscribes.forEach((unsubscribe: () => any) => unsubscribe && unsubscribe());
+    };
   }, [roomId])
 
   React.useEffect(() => {
